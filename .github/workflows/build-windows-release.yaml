@@ -1,0 +1,40 @@
+name: Build windows release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    permissions: write-all
+    runs-on: windows-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: |
+          cmake ^
+            -S src ^
+            -B build ^
+            -D CMAKE_CONFIGURATION_TYPES=Release ^
+            -D CPACK_GENERATOR="ZIP"
+        shell: cmd
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+        shell: cmd
+
+      - name: Pack
+        run: cmake --build build --config Release --target PACKAGE
+        shell: cmd
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/actions-simple-*.zip
