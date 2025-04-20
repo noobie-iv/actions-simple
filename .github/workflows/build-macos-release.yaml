@@ -1,0 +1,39 @@
+name: Build macos release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    permissions: write-all
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: |
+          cmake \
+            -S src \
+            -B build \
+            -D CPACK_GENERATOR="DragNDrop"
+        shell: sh
+
+      - name: Build
+        run: cmake --build build --parallel
+        shell: sh
+
+      - name: Pack
+        run: cmake --build build --target package
+        shell: sh
+
+      - name: Upload release assets
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/actions-simple-*.dmg
